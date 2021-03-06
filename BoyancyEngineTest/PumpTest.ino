@@ -10,7 +10,7 @@
 #define RUN_CYCLES  2                //number of complete cycles (i.e. dives) to go through
 #define PRESSURE_UPPER_LIMIT 15   //Pressure Upper Limit
 #define PRESSURE_LOWER_LIMIT -5   //Pressure Lower Limit
-#define SOLENOID_PIN LED_BUILTIN //9
+//#define SOLENOID_PIN LED_BUILTIN //9
 #define ON  1
 #define OFF 0
 
@@ -19,9 +19,12 @@
 #define CYCLE_START_WITH_PUMP_IN 1
 
 #define KEY_START_PUMP_TEST_CYCLE 116   //letter 't' lowercase, kicks off pump cycle
-#define KEY_PUMP_IN_TOGGLE 105   //letter 'i' lowercase
-#define KEY_PUMP_OUT_TOGGLE 111   //letter 'o' lowercase
-#define KEY_SOLENOID_TOGGLE  115  //letter 's' lowercase
+#define KEY_PUMP_IN_TOGGLE    105     //letter 'i' lowercase
+#define KEY_PUMP_OUT_TOGGLE   111     //letter 'o' lowercase
+#define KEY_SOLENOID_TOGGLE   115     //letter 's' lowercase
+#define KEY_NEXT_STATE        110     //letter 'n' lowercase
+
+
 
 unsigned long previousMillisPUMP_IN = 0;
 unsigned long previousMillisPUMP_OUT = 0;
@@ -42,30 +45,44 @@ void loopPumpTest() {
   if (engineTestState == PUMP_TEST) {
     if (pumpTestState == PUMP_STANDBY) {
       loopPumpStandbyRespondToKeyPresses();
-
+    }
+    if (pumpTestState == PUMP_OFF) {  //pump_off is only to turn everything off, then jump to standby
+      changePumpTestState(PUMP_STANDBY);
     }
     else if (pumpTestState == PUMP_IN_ON) {
       b = checkSerial();
-      if (latestPressureM300_BLADDER >= PRESSURE_UPPER_LIMIT || b == 110) { //pressing 'n' will skip to next state
+      if (latestPressureM300_BLADDER >= PRESSURE_UPPER_LIMIT || b == KEY_NEXT_STATE) { //pressing 'n' will skip to next state
         changePumpTestState(PUMP_IN_HOLD);
+      }
+      else if (b == KEY_START_PUMP_TEST_CYCLE) { //press 't' again to stop test (toggle)
+        changePumpTestState(PUMP_OFF);
       }
     }
     else if (pumpTestState == PUMP_OUT_ON) {
       b = checkSerial();
-      if (latestPressureM300_BLADDER < PRESSURE_LOWER_LIMIT || b == 110) {
+      if (latestPressureM300_BLADDER < PRESSURE_LOWER_LIMIT || b == KEY_NEXT_STATE) {
         changePumpTestState(PUMP_OUT_HOLD);
+      }
+      else if (b == KEY_START_PUMP_TEST_CYCLE) { //press 't' again to stop test (toggle)
+        changePumpTestState(PUMP_OFF);
       }
     }
     else if (pumpTestState == PUMP_IN_HOLD) {
       b = checkSerial();
-      if (currentMillis - previousMillisPUMP_IN > PUMP_INTERVAL_IN_POSTDELAY || b == 110) {
+      if (currentMillis - previousMillisPUMP_IN > PUMP_INTERVAL_IN_POSTDELAY || b == KEY_NEXT_STATE) {
         changePumpTestState(PUMP_OUT_ON);
+      }
+      else if (b == KEY_START_PUMP_TEST_CYCLE) { //press 't' again to stop test (toggle)
+        changePumpTestState(PUMP_OFF);
       }
     }
     else if (pumpTestState == PUMP_OUT_HOLD) {
       b = checkSerial();
-      if (currentMillis - previousMillisPUMP_OUT > PUMP_INTERVAL_OUT_POSTDELAY || b == 110) {
+      if (currentMillis - previousMillisPUMP_OUT > PUMP_INTERVAL_OUT_POSTDELAY || b == KEY_NEXT_STATE) {
         changePumpTestState(PUMP_IN_ON);
+      }
+      else if (b == KEY_START_PUMP_TEST_CYCLE) { //press 't' again to stop test (toggle)
+        changePumpTestState(PUMP_OFF);
       }
     }
     else if (pumpTestState == PUMP_OFF) {
@@ -114,6 +131,10 @@ void changePumpTestState(enum PumpTestState newState) {
     previousMillisPUMP_OUT = millis();      //mark time for timer for how long to be in 'hold' state
     Serial.print("State: PUMP_IN_HOLD seconds:");  Serial.println(PUMP_INTERVAL_IN_POSTDELAY);
   }
+  else if (newState == PUMP_OFF) {
+    controlSolenoid(OFF);
+    pumpOut(OFF);
+  }
   pumpTestState = newState;
 
 #ifdef ENGINE_DEBUG_PRINT
@@ -143,6 +164,7 @@ void pumpIn(int turnON) {
   if (!actualPumpOnOut) {
     if (turnON) {
       //turn pump on
+      pumpMotorSpin(DIRECTION_IN, PWM_SLOW);
       actualPumpOnIn = ON;
 #ifdef ENGINE_DEBUG_PRINT
       Serial.println("----PumpIN ON----");
@@ -158,14 +180,15 @@ void pumpIn(int turnON) {
   }
   else {
 #ifdef ENGINE_DEBUG_PRINT
-      Serial.println("----ERROR: pump is already ON OUT");
-#endif   
+    Serial.println("----ERROR: pump is already ON OUT");
+#endif
   }
 }
 void pumpOut(int turnON) {
   if (!actualPumpOnIn) {
     if (turnON) {
       //turn pump on
+      pumpMotorSpin(DIRECTION_OUT, PWM_SLOW);
       actualPumpOnOut = ON;
 #ifdef ENGINE_DEBUG_PRINT
       Serial.println("----PumpOUT ON----");
@@ -181,8 +204,8 @@ void pumpOut(int turnON) {
   }
   else {
 #ifdef ENGINE_DEBUG_PRINT
-      Serial.println("----ERROR: pump is already ON IN");
-#endif     
+    Serial.println("----ERROR: pump is already ON IN");
+#endif
   }
 }
 
@@ -245,8 +268,8 @@ byte checkSerial() {
     byte incomingByte = Serial.read();
 
     // say what you got:
-    Serial.print("I received: ");
-    Serial.println(incomingByte, DEC);
+    //Serial.print("I received: ");
+    //Serial.println(incomingByte, DEC);
     //pumpTestProcessInput(incomingByte);
     return incomingByte;
   }

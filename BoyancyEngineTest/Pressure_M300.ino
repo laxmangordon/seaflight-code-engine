@@ -11,8 +11,8 @@
     - The MSP300 can return temperature - worth adding as another data point
 */
 
-#define PRESSURE_M300_BLADDER 1
-#define PRESSURE_M300_RESERVOIR 2
+#define PRESSURE_M300_BLADDER 0
+#define PRESSURE_M300_RESERVOIR 1
 #define PRESSURE_SENSOR_REFRESH_RATE 500 //in milliseconds
 
 long latestPressureM300_BLADDER = 0;
@@ -23,59 +23,74 @@ long intervalPressureM300 = 500;
 struct PressureM300 {
   int pressureHigh;
   int pressureLow;
-  int i2c;
+  int muxPort;
   long latestPressure;
 };
 
-PressureM300 pressureM300_Bladder = { 255 , 0 , 2 , 0};
-PressureM300 pressureM300_Reservoir = { 255 , 0 , 2, 0 };
+PressureM300 pressureM300_Bladder = { 255 , 0 , 0 , 0};
+PressureM300 pressureM300_Reservoir = { 255 , 0 , 1, 0 };
 
 void setupPressure_M300() {
-  
+
 }
 
 void loopPressure_M300() {
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillisPressureM300 > intervalPressureM300) {
     previousMillisPressureM300 = currentMillis;
-    latestPressureM300_BLADDER = getPressure_M300();  //bladder for now until we get mux, it was all we had on initial testbed
-    latestPressureM300_RESERVOIR = latestPressureM300_BLADDER;  //TEMP TEMP TEMP TEMP TEMP TEMP
-#ifdef SENSOR_DEBUG_PRINT
-    //Serial.print("pressure M300 = ");
-    //Serial.println(latestPressureM300_BLADDER);
-#endif
+    latestPressureM300_BLADDER = getPressure_M300(PRESSURE_M300_BLADDER);  //bladder for now until we get mux, it was all we had on initial testbed
+    latestPressureM300_RESERVOIR = getPressure_M300(PRESSURE_M300_RESERVOIR);  
+
+
+    if (SENSOR_DEBUG_PRINT) {
+      //Serial.print("pressure M300 = ");
+      //Serial.println(latestPressureM300_BLADDER);
+    }
+
   }
 }
 
-long getPressure_M300()
+long getPressure_M300(int mux)
 {
-  Wire.requestFrom(40, 2);
-
+  enableMuxPort(mux);
+  Wire.requestFrom(40, 2);  //40 is address of M300, 112 is address of
   while (Wire.available() == 0);  //consider collecting data inside this while loop  while(Wire.available()) {
-  long Pval = Wire.read();
-  long Pval2 = Wire.read();
-  int pressureStatus = Pval & 0xC0;
+  long Pval = Wire.read();              //MSB
+  long Pval2 = Wire.read();             //LSB
+  int pressureStatus = Pval & 0xC0;     // 0xC0 = 1100 0000
   pressureStatus = pressureStatus >> 6;
-  Pval = Pval & 0x3F;                   //mask out the status bits
+  Pval = Pval & 0x3F;                   //mask out the status bits 0x3F = 0011 1111
   //int Pval3 = Wire.read();
   long Pvalshift = Pval << 8;
   long finalnum = Pvalshift | Pval2;
+  
+  //  Pressure Sensor info:
+  //  Manufacturer: TE  Part number: M30J1-000105-300PG
+  //  i2c, 17-4PH Stainless Steel, Sleep Mode, i2c add=0X28H, 1/4-18 NPT, psi std=300, bar std=020B, pressure ref = guage 
+  //  Pmax = 300
+  //  Pmin = 0
+  // output(decimal counts) = (15000-1000)/(Pmax-Pmin) x (Papplied - Pmin) + 1000
+    
   long Pressure = (finalnum - 1000) / ((15000 - 1000) / 300);
-
+  
   Wire.beginTransmission(40);
   Wire.write(0);
   Wire.endTransmission();
-
-#ifdef SENSOR_DEBUG_PRINT
-  Serial.print("Pressure M300=");
-  Serial.print(Pressure);
-  Serial.print("  pval:");
-  Serial.print(Pval);
-  Serial.print("  pval2:");
-  Serial.print(Pval2);
-  Serial.print("  status:");
-  Serial.println(pressureStatus);
-#endif
+  disableMuxPort(mux);
+  if (SENSOR_DEBUG_PRINT) {
+    Serial.print("Pressure M300=");
+    Serial.print(Pressure);
+    Serial.print(" Fin=");
+    Serial.print(finalnum);
+    Serial.print(" MUX=");
+    Serial.print(mux);
+    Serial.print(" pval:");
+    Serial.print(Pval);
+    Serial.print("  pval2:");
+    Serial.print(Pval2);
+    Serial.print("  status:");
+    Serial.println(pressureStatus);
+  }
 
   return Pressure;
 }
