@@ -29,7 +29,7 @@
 #define PWM_PIN               3
 #define CW_PIN                7
 #define CCW_PIN               8
-#define SOLENOID_PIN  6
+#define SOLENOID_PIN          6
 
 #define PWM_MAX       2000
 #define PWM_MIN       1000

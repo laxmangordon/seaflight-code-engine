@@ -6,37 +6,40 @@
   by Scott Fitzgerald
   http://www.ardui8no.cc/en/Tutorial/Knob
 */
-#include "SAMD_AnalogCorrection.h"
+//#include "SAMD_AnalogCorrection.h"  // https://github.com/arduino/ArduinoCore-samd
 #include <Servo.h>
 #define PWM_ZERO        1000
 #define PWM_MAX         2000
 #define RAMP_DELAY      3000
 #define PWM_RAMP_INCR   20
 
-#define ADC_INTERVAL          500
-#define ADC_READS_SHIFT      8
-#define ADC_READS_COUNT      (1 << ADC_READS_SHIFT)
-#define ADC_RESOLUTION_BITS   12
-#define ADC_RANGE             (1 << ADC_RESOLUTION_BITS)
-#define ADC_TOP_VALUE         (ADC_RANGE - 1)
-#define MAX_TOP_VALUE_READS   10
-
-#define ADC_CURRENT_PORT      A2  // current is from 0V-4V 0A-20A
-#define ADC_CURRENT_AMP_UP    20
-#define ADC_CURRENT_VOLT      4
-
-#define ADC_RPM_PORT          A3  // speed is from 0V-4V, 0RPM-5000RPM
-#define ADC_RPM_UP            5000
-#define ADC_RPM_VOLT          4
+//#define ADC_INTERVAL          500
+//#define ADC_READS_SHIFT      8
+//#define ADC_READS_COUNT      (1 << ADC_READS_SHIFT)
+//#define ADC_RESOLUTION_BITS   12
+//#define ADC_RANGE             (1 << ADC_RESOLUTION_BITS)
+//#define ADC_TOP_VALUE         (ADC_RANGE - 1)
+//#define MAX_TOP_VALUE_READS   10
+//
+//#define ADC_CURRENT_PORT      A2  // current is from 0V-4V 0A-20A
+//#define ADC_CURRENT_AMP_UP    20
+//#define ADC_CURRENT_VOLT      4
+//
+//#define ADC_RPM_PORT          A3  // speed is from 0V-4V, 0RPM-5000RPM
+//#define ADC_RPM_UP            5000
+//#define ADC_RPM_VOLT          4
 
 #define PWM_PIN               3
 #define CW_PIN                7
 #define CCW_PIN               8
+#define SOLENOID_PIN          6
 
 bool ramp = false;
 bool rampUp = false;
 bool rampDn = false;
 bool readAnalog = true;
+bool solenoidON = false;
+
 Servo myservo;  // create servo object to control a servo
 unsigned long previousMillis = 0;
 unsigned long previousAnalogMillis = 0;
@@ -46,14 +49,17 @@ int valu = 100;  // variable to read the value from the analog pin
 // analogReadCorrection(12, 2055);
 
 void setup() {
-  analogReadResolution(ADC_RESOLUTION_BITS);
-  //analogReadCorrection(12, 2055); //corrects gain
+  //analogReadResolution(ADC_RESOLUTION_BITS);
+  //////analogReadCorrection(12, 2055); //corrects gain
   pinMode(CW_PIN, OUTPUT);
   digitalWrite(CW_PIN, HIGH);
 
   pinMode(CCW_PIN, OUTPUT);
   digitalWrite(CCW_PIN, HIGH);
-
+  
+  pinMode(SOLENOID_PIN, OUTPUT);
+  digitalWrite(SOLENOID_PIN, LOW);
+  
   Serial.begin(115200);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
@@ -63,6 +69,8 @@ void setup() {
   Serial.println("1 1000 means set pwm to 1000");
   Serial.println("2 means ramp up from 1000 (which is 0 rpm)");
   Serial.println("3 means ramp dn to 1000 (which is 0 rpm)");
+  Serial.println("4 means SOLENOID = ON");
+  Serial.println("5 means SOLENOID = OFF");
   Serial.println("7 means toggle analog read");
   Serial.println("8 means CW ENABLED");
   Serial.println("9 means CCW ENABLED");
@@ -103,6 +111,10 @@ void loop() {
           Serial.println("starting rampDn...");
         }
         break;
+      case 4:
+        digitalWrite(SOLENOID_PIN, HIGH);
+      case 5:
+        digitalWrite(SOLENOID_PIN, LOW);
       case 7: //toggle analog read
         if(readAnalog == true){
           readAnalog = false;
@@ -162,7 +174,7 @@ void loop() {
 
 
   }
-
+/*
   if((millis() - previousAnalogMillis > ADC_INTERVAL) && readAnalog == true) {
     previousAnalogMillis = millis(); 
     //uint16_t pumpCurrentRaw = readAnalogPort(ADC_CURRENT_PORT);
@@ -186,8 +198,9 @@ void loop() {
     Serial.println(pumpRPM);
     
   }
+  */
 }
-
+/*
 uint16_t readAnalogPort(int port)
 {
   uint32_t readAccumulator = 0;
@@ -202,3 +215,4 @@ uint16_t readAnalogPort(int port)
 
   return readValue;
 }
+*/
