@@ -1,10 +1,20 @@
-#include <Adafruit_PWMServoDriver.h>
-#include "MillisTimer.h"
-#include <Wire.h>
-#include <Servo.h>
+#if defined(ARDUINO_SAMD_ZERO) && defined(SERIAL_PORT_USBVIRTUAL)
+  // Required for Serial on Zero based boards
+  #define Serial SERIAL_PORT_USBVIRTUAL
+#endif
 
-//#define SENSOR_DEBUG_PRINT 
+#include <Wire.h>
+#include <SerLCD.h> //Click here to get the library: http://librarymanager/All#SparkFun_SerLCD
+#include <SPI.h>
+#include <SD.h>
+#include "Adafruit_VL6180X.h"
+#include "SparkFun_RV1805.h"
+
 #define ENGINE_DEBUG_PRINT 1
+
+#define PRESSURE_RES        0
+#define LCD_MUX             4
+
 
 enum GliderState {
   EMERGENCY,
@@ -60,12 +70,19 @@ int Pval2;
 long finalnumber;
 int Pset = 75;   //Pressure Upper Limit
 int Pmin = 10;   //Pressure Lower Limit
+SerLCD lcd; // Initialize the library with default I2C address 0x72
+bool SENSOR_DEBUG_PRINT = false;
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
+  setupLCDDisplay();
+  int serialDelay = 0;
+  while (!Serial || serialDelay < 3) {
     ; // wait for serial port to connect. Needed for native USB port only
+    delay(1000);
+    serialDelay++;
   }
+  
   Wire.begin();        //begin I2C Comm.
   Serial.println("SeaFlight Glider v0.01 ENGINE TEST CODE");
 
@@ -78,15 +95,58 @@ void setup() {
   engineTestState = PUMP_TEST;
   pumpTestState = PUMP_INIT;
 
+  setupClockRV1805();
   setupPressure_M300();
   setupPumpTest();
   setupControlPump();
-  
-  
+  setupTOF_VL6180();
+  setupInputs();
+  //setupStorage();
 }
 
 void loop() {
+  loopClockRV1805();
   loopPressure_M300();
   loopPumpTest();
-  
+  loopTOF_VL6180();
+  loopInputs();
+  loopLCDDisplay();
+  loopStorage();
+}
+
+#define MUX_ADDR 0x70 //7-bit unshifted default I2C Address
+//Enables a specific port number
+void enableMuxPort(byte portNumber)
+{
+  if (portNumber > 7) portNumber = 7;
+
+  Wire.beginTransmission(MUX_ADDR);
+  //Read the current mux settings
+  Wire.requestFrom(MUX_ADDR, 1);
+  if (!Wire.available()) return; //Error
+  byte settings = Wire.read();
+
+  //Set the wanted bit to enable the port
+  settings |= (1 << portNumber);
+
+  Wire.write(settings);
+  Wire.endTransmission();
+}
+
+//Disables a specific port number
+void disableMuxPort(byte portNumber)
+{
+  if (portNumber > 7) portNumber = 7;
+
+  Wire.beginTransmission(MUX_ADDR);
+  //Read the current mux settings
+  Wire.requestFrom(MUX_ADDR, 1);
+  if (!Wire.available()) return; //Error
+  byte settings = Wire.read();
+
+  //Clear the wanted bit to disable the port
+  settings &= ~(1 << portNumber);
+
+  Wire.write(settings);
+  Wire.endTransmission();
 }
