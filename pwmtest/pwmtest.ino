@@ -1,3 +1,4 @@
+
 /*
   Controlling a servo position using a potentiometer (variable resistor)
   by Michal Rinott <http://people.interaction-ivrea.it/m.rinott>
@@ -8,6 +9,8 @@
 */
 //#include "SAMD_AnalogCorrection.h"  // https://github.com/arduino/ArduinoCore-samd
 #include <Servo.h>
+
+
 #define PWM_ZERO        1000
 #define PWM_MAX         2000
 #define RAMP_DELAY      3000
@@ -113,8 +116,12 @@ void loop() {
         break;
       case 4:
         digitalWrite(SOLENOID_PIN, HIGH);
+        Serial.println("SOLENOID_PIN, HIGH");
+        break;
       case 5:
         digitalWrite(SOLENOID_PIN, LOW);
+        Serial.println("SOLENOID_PIN, LOW");
+        break;
       case 7: //toggle analog read
         if(readAnalog == true){
           readAnalog = false;
