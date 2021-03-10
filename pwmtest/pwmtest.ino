@@ -231,11 +231,11 @@ void loop() {
 }
 
 
-void controlPumpCW(bool on) {
+void controlPumpCW(bool on) {     // going INTO pressure housing
   if (on) {
     myservo.write(PWM_NORMALSPEED);
-    digitalWrite(CCW_PIN, LOW);
-    digitalWrite(CW_PIN, HIGH);
+    digitalWrite(CCW_PIN, HIGH);
+    digitalWrite(CW_PIN, LOW);
   } else {
     digitalWrite(CCW_PIN, HIGH);
     digitalWrite(CW_PIN, HIGH);
@@ -243,7 +243,7 @@ void controlPumpCW(bool on) {
   }
 }
 
-void controlPumpCCW(bool on) {
+void controlPumpCCW(bool on) {      // going OUT pressure housing
   if (on) {
     myservo.write(PWM_NORMALSPEED);
     digitalWrite(CCW_PIN, LOW);

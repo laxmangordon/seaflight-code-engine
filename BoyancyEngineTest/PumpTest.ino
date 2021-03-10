@@ -143,14 +143,14 @@ void changePumpTestState(enum PumpTestState newState) {
 
 void controlSolenoid(int turnON) {
   if (turnON) {
-    digitalWrite(SOLENOID_PIN, LOW);
+    digitalWrite(SOLENOID_PIN, HIGH);
     actualSolenoidOn = ON;
 #ifdef ENGINE_DEBUG_PRINT
     Serial.println("----Solenoid ON----");
 #endif
   }
   else {
-    digitalWrite(SOLENOID_PIN, HIGH);
+    digitalWrite(SOLENOID_PIN, LOW);
     actualSolenoidOn = OFF;
 #ifdef ENGINE_DEBUG_PRINT
     Serial.println("----Solenoid OFF----");
@@ -158,15 +158,16 @@ void controlSolenoid(int turnON) {
   }
 }
 
-void pumpIn(int turnON) {
+void pumpIn(bool turnON) {
   if (!actualPumpOnOut) {
     if (turnON) {
-      //turn pump on
-      pumpMotorSpin(DIRECTION_IN, PWM_SLOW);
-      actualPumpOnIn = ON;
 #ifdef ENGINE_DEBUG_PRINT
       Serial.println("----PumpIN ON----");
 #endif
+      //turn pump on
+      pumpMotorSpin(DIRECTION_IN, PWM_SLOW);
+      actualPumpOnIn = ON;
+
     }
     else {
       //turn pump off
@@ -182,15 +183,15 @@ void pumpIn(int turnON) {
 #endif
   }
 }
-void pumpOut(int turnON) {
+void pumpOut(bool turnON) {
   if (!actualPumpOnIn) {
     if (turnON) {
-      //turn pump on
-      pumpMotorSpin(DIRECTION_OUT, PWM_SLOW);
-      actualPumpOnOut = ON;
 #ifdef ENGINE_DEBUG_PRINT
       Serial.println("----PumpOUT ON----");
 #endif
+      //turn pump on
+      pumpMotorSpin(DIRECTION_OUT, PWM_SLOW);
+      actualPumpOnOut = ON;
     }
     else {
       //turn pump off
