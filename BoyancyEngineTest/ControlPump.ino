@@ -1,7 +1,9 @@
 #include <Servo.h>
 #include "SAMD_AnalogCorrection.h"
 
-#define DIRECTION_IN  0           //pumps INTO reservoir
+// 3/10/21  from Jeremy: CCW is OUT, CW is IN from perspective of reservoir
+
+#define DIRECTION_IN  0           //pumps INTO reservoir    
 #define DIRECTION_OUT 1          //pumps OUT of reservoir
 #define PWM_PUMP_PIN  3
 
@@ -33,9 +35,9 @@
 
 #define PWM_MAX       2000
 #define PWM_MIN       1000
-#define PWM_SLOW      1025
-#define PWM_MED       1050
-#define PWM_FAST      1100
+#define PWM_SLOW      1200
+#define PWM_MED       1300
+#define PWM_FAST      1500
 
 
 int currentPWMSpeed = 1000;
@@ -67,17 +69,17 @@ void initControlPump() {
 
 
 void pumpMotorSpin(int dir, int pwm) {
-  if (pwm <= PWM_MIN && pwm <= PWM_MAX) {
+  if (pwm >= PWM_MIN && pwm <= PWM_MAX) {
     if (dir == DIRECTION_IN) {
       Serial.printf("pumpMotorSpin DIRECTION_IN");
-      digitalWrite(CCW_PIN, HIGH);
-      digitalWrite(CW_PIN, LOW);
+      digitalWrite(CCW_PIN, LOW);
+      digitalWrite(CW_PIN, HIGH);
       myservo.write(pwm);
     }
     else if (dir == DIRECTION_OUT) {
       Serial.printf("pumpMotorSpin DIRECTION_OUT");
-      digitalWrite(CCW_PIN, LOW);
-      digitalWrite(CW_PIN, HIGH);
+      digitalWrite(CCW_PIN, HIGH);
+      digitalWrite(CW_PIN, LOW);
       myservo.write(pwm);
     }
   }
