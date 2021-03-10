@@ -34,9 +34,7 @@ bool actualPumpOnOut = OFF;
 bool actualSolenoidOn = OFF;
 
 void setupPumpTest() {
-  pinMode(SOLENOID_PIN, OUTPUT);
-  digitalWrite(SOLENOID_PIN, LOW); // High = Relay On
-  changePumpTestState(PUMP_INIT);
+   changePumpTestState(PUMP_INIT);
 }
 
 void loopPumpTest() {

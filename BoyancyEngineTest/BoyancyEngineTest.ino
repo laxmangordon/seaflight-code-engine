@@ -7,13 +7,14 @@
 #include <SerLCD.h> //Click here to get the library: http://librarymanager/All#SparkFun_SerLCD
 #include <SPI.h>
 #include <SD.h>
-#include "Adafruit_VL6180X.h"
-#include "SparkFun_RV1805.h"
+#include "Adafruit_VL6180X.h"   // library: https://github.com/adafruit/Adafruit_VL6180X
+#include "SparkFun_RV1805.h"    // library: https://github.com/sparkfun/SparkFun_RV-1805_Arduino_Library/archive/master.zip
 
 #define ENGINE_DEBUG_PRINT 1
 
 #define PRESSURE_RES        0
 #define LCD_MUX             4
+#define MUX_ADDR            0x70             //7-bit unshifted default I2C Address
 
 
 enum GliderState {
@@ -71,7 +72,8 @@ long finalnumber;
 int Pset = 75;   //Pressure Upper Limit
 int Pmin = 10;   //Pressure Lower Limit
 SerLCD lcd; // Initialize the library with default I2C address 0x72
-bool SENSOR_DEBUG_PRINT = false;
+
+bool SENSOR_DEBUG_PRINT = false;  //To see real time readouts on the Serial console set this to TRUE
 
 void setup() {
   Serial.begin(115200);
@@ -114,7 +116,6 @@ void loop() {
   loopStorage();
 }
 
-#define MUX_ADDR 0x70 //7-bit unshifted default I2C Address
 //Enables a specific port number
 void enableMuxPort(byte portNumber)
 {

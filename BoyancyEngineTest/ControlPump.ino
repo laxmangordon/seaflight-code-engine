@@ -53,7 +53,7 @@ void setupControlPump() {
   digitalWrite(CCW_PIN, HIGH);
 
   pinMode(SOLENOID_PIN, OUTPUT);
-  digitalWrite(SOLENOID_PIN, HIGH);
+  digitalWrite(SOLENOID_PIN, LOW);
 
   currentPWMSpeed = 1000;
 
