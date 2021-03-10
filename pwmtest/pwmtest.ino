@@ -10,7 +10,7 @@
 //#include "SAMD_AnalogCorrection.h"  // https://github.com/arduino/ArduinoCore-samd
 #include <Servo.h>
 
-
+#define PWM_NORMALSPEED 1200
 #define PWM_ZERO        1000
 #define PWM_MAX         2000
 #define RAMP_DELAY      3000
@@ -43,6 +43,8 @@ bool rampDn = false;
 bool readAnalog = true;
 bool solenoidON = false;
 
+bool pumpCW = false;
+bool pumpCCW = false;
 Servo myservo;  // create servo object to control a servo
 unsigned long previousMillis = 0;
 unsigned long previousAnalogMillis = 0;
@@ -59,10 +61,10 @@ void setup() {
 
   pinMode(CCW_PIN, OUTPUT);
   digitalWrite(CCW_PIN, HIGH);
-  
+
   pinMode(SOLENOID_PIN, OUTPUT);
   digitalWrite(SOLENOID_PIN, LOW);
-  
+
   Serial.begin(115200);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
@@ -74,7 +76,8 @@ void setup() {
   Serial.println("3 means ramp dn to 1000 (which is 0 rpm)");
   Serial.println("4 means SOLENOID = ON");
   Serial.println("5 means SOLENOID = OFF");
-  Serial.println("7 means toggle analog read");
+  Serial.println("6 means CW PUMP TOGGLE");
+  Serial.println("7 means CCW PUMP TOGGLE");
   Serial.println("8 means CW ENABLED");
   Serial.println("9 means CCW ENABLED");
   Serial.println("0 means OFF");
@@ -87,6 +90,7 @@ int pwmCounter = 0;
 void loop() {
   if (Serial.available() > 0)  {
     int incomingData = Serial.parseInt();
+    Serial.println(incomingData);
     //int incomingData = Serial.read(); // can be -1 if read error
     switch (incomingData) {
       case 1:
@@ -115,19 +119,37 @@ void loop() {
         }
         break;
       case 4:
-        digitalWrite(SOLENOID_PIN, HIGH);
+        digitalWrite(SOLENOID_PIN, HIGH);       // 0.83amps @ 12.2v = 10.13watts
         Serial.println("SOLENOID_PIN, HIGH");
         break;
       case 5:
         digitalWrite(SOLENOID_PIN, LOW);
         Serial.println("SOLENOID_PIN, LOW");
         break;
-      case 7: //toggle analog read
-        if(readAnalog == true){
-          readAnalog = false;
-        } else {
-          readAnalog = true;
+      case 6:
+        if (pumpCW) {
+          Serial.println("pumpCW OFF");
+          pumpCW = false;
+          controlPumpCW(false);
         }
+        else {
+          Serial.println("pumpCW ON");
+          pumpCW = true;
+          controlPumpCW(true);
+        }
+        break;
+      case 7:
+        if (pumpCCW) {
+          Serial.println("pumpCCW OFF");
+          pumpCCW = false;
+          controlPumpCCW(false);
+        }
+        else {
+          Serial.println("pumpCCW ON");
+          pumpCCW = true;
+          controlPumpCCW(true);
+        }
+        break;
       case 8:     //CCW
         Serial.println("CW_PIN, LOW");
         digitalWrite(CCW_PIN, HIGH);
@@ -181,45 +203,70 @@ void loop() {
 
 
   }
-/*
-  if((millis() - previousAnalogMillis > ADC_INTERVAL) && readAnalog == true) {
-    previousAnalogMillis = millis(); 
-    //uint16_t pumpCurrentRaw = readAnalogPort(ADC_CURRENT_PORT);
-    //uint16_t pumpRPMRaw = readAnalogPort(ADC_RPM_PORT);
-    //uint16_t pumpCurrent = map(pumpCurrentRaw, 0, ADC_CURRENT_VOLT, 0, ADC_CURRENT_AMP_UP);
-    //uint16_t pumpRPM = map(pumpRPMRaw, 0, 1023, 0, 4);
-    int pumpCurrentRaw = analogRead(A2);
-    int pumpRPMRaw = analogRead(A3);
-    float pumpCurrentVoltageIn = (pumpCurrentRaw * 3.3) / ADC_TOP_VALUE;
-    float pumpRPMVoltageIn = (pumpRPMRaw * 3.3) / ADC_TOP_VALUE;
-    uint16_t pumpCurrent = map((pumpCurrentRaw * 3.3) / 65536, 0, ADC_CURRENT_VOLT, 0, ADC_CURRENT_AMP_UP);
-    uint16_t pumpRPM = map(pumpRPMVoltageIn, 0, ADC_RPM_VOLT, 0, ADC_RPM_UP);
-    Serial.print("rawCurr=");
-    Serial.print(pumpCurrentRaw);
-    Serial.print("  cur= ");
-    Serial.print(pumpCurrent);
+  /*
+    if((millis() - previousAnalogMillis > ADC_INTERVAL) && readAnalog == true) {
+      previousAnalogMillis = millis();
+      //uint16_t pumpCurrentRaw = readAnalogPort(ADC_CURRENT_PORT);
+      //uint16_t pumpRPMRaw = readAnalogPort(ADC_RPM_PORT);
+      //uint16_t pumpCurrent = map(pumpCurrentRaw, 0, ADC_CURRENT_VOLT, 0, ADC_CURRENT_AMP_UP);
+      //uint16_t pumpRPM = map(pumpRPMRaw, 0, 1023, 0, 4);
+      int pumpCurrentRaw = analogRead(A2);
+      int pumpRPMRaw = analogRead(A3);
+      float pumpCurrentVoltageIn = (pumpCurrentRaw * 3.3) / ADC_TOP_VALUE;
+      float pumpRPMVoltageIn = (pumpRPMRaw * 3.3) / ADC_TOP_VALUE;
+      uint16_t pumpCurrent = map((pumpCurrentRaw * 3.3) / 65536, 0, ADC_CURRENT_VOLT, 0, ADC_CURRENT_AMP_UP);
+      uint16_t pumpRPM = map(pumpRPMVoltageIn, 0, ADC_RPM_VOLT, 0, ADC_RPM_UP);
+      Serial.print("rawCurr=");
+      Serial.print(pumpCurrentRaw);
+      Serial.print("  cur= ");
+      Serial.print(pumpCurrent);
 
-    Serial.print("  rawRPM=");
-    Serial.print(pumpRPMRaw);
-    Serial.print(" rpm=");
-    Serial.println(pumpRPM);
-    
-  }
+      Serial.print("  rawRPM=");
+      Serial.print(pumpRPMRaw);
+      Serial.print(" rpm=");
+      Serial.println(pumpRPM);
+
+    }
   */
 }
+
+
+void controlPumpCW(bool on) {
+  if (on) {
+    myservo.write(PWM_NORMALSPEED);
+    digitalWrite(CCW_PIN, LOW);
+    digitalWrite(CW_PIN, HIGH);
+  } else {
+    digitalWrite(CCW_PIN, HIGH);
+    digitalWrite(CW_PIN, HIGH);
+    myservo.writeMicroseconds(PWM_ZERO);
+  }
+}
+
+void controlPumpCCW(bool on) {
+  if (on) {
+    myservo.write(PWM_NORMALSPEED);
+    digitalWrite(CCW_PIN, LOW);
+    digitalWrite(CW_PIN, HIGH);
+  } else {
+    digitalWrite(CCW_PIN, HIGH);
+    digitalWrite(CW_PIN, HIGH);
+    myservo.writeMicroseconds(PWM_ZERO);
+  }
+}
 /*
-uint16_t readAnalogPort(int port)
-{
+  uint16_t readAnalogPort(int port)
+  {
   uint32_t readAccumulator = 0;
 
   for (int i = 0; i < ADC_READS_COUNT; ++i)
     readAccumulator += analogRead(port);
 
   uint16_t readValue = analogRead(port); //readAccumulator >> ADC_READS_SHIFT;
-  
+
   //Serial.print("ADC(GND) = ");
   //Serial.println(readValue);
 
   return readValue;
-}
+  }
 */

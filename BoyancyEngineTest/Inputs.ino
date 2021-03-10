@@ -2,6 +2,7 @@
 QwiicButton redStopButton;
 
 bool stopButtonON = false;
+
 void setupInputs() {
   if (redStopButton.begin() == false) {
     Serial.println("Red Button did not acknowledge! Freezing.");
