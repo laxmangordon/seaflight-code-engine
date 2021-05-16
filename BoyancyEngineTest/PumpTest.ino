@@ -23,7 +23,7 @@
 #define KEY_PUMP_OUT_TOGGLE   111     //letter 'o' lowercase
 #define KEY_SOLENOID_TOGGLE   115     //letter 's' lowercase
 #define KEY_NEXT_STATE        110     //letter 'n' lowercase
-
+#define KEY_VT100_DASH_TOGGLE 100     //letter 'd' lowercase
 
 
 unsigned long previousMillisPUMP_IN = 0;
@@ -34,7 +34,7 @@ bool actualPumpOnOut = OFF;
 bool actualSolenoidOn = OFF;
 
 void setupPumpTest() {
-   changePumpTestState(PUMP_INIT);
+  changePumpTestState(PUMP_INIT);
 }
 
 void loopPumpTest() {
@@ -99,35 +99,37 @@ void changePumpTestState(enum PumpTestState newState) {
     initControlPump();
   }
   else if (newState == PUMP_STANDBY) {
-    Serial.println("PUMP_STANDBY accepting serial commands:");
-    Serial.println("(t) to begin engine cycle test");
-    Serial.println("(s) to toggle solenoid");
-    Serial.println("(i) to toggle pump IN (into reservoir, out of bladder)");
-    Serial.println("(o) to toggle pump OUT (out of reservoir, into bladder)");
+    
+    
+    out.println("PUMP_STANDBY accepting serial commands:");
+    out.println("(t) to begin engine cycle test");
+    out.println("(s) to toggle solenoid");
+    out.println("(i) to toggle pump IN (into reservoir, out of bladder)");
+    out.println("(o) to toggle pump OUT (out of reservoir, into bladder)");
 
   }
   else if (newState == PUMP_IN_ON) {
     controlSolenoid(ON);
     pumpIn(ON);
-    Serial.println("State: PUMP_IN_ON press (n) to skip PUMP_IN_HOLD");
+    out.println("State: PUMP_IN_ON press (n) to skip PUMP_IN_HOLD");
 
   }
   else if (newState == PUMP_OUT_ON) {
     controlSolenoid(OFF);
     pumpOut(ON);
-    Serial.println("State: PUMP_OUT_ON press (n) to skip PUMP_OUT_HOLD");
+    out.println("State: PUMP_OUT_ON press (n) to skip PUMP_OUT_HOLD");
   }
   else if (newState == PUMP_IN_HOLD) {
     controlSolenoid(OFF);
     pumpIn(OFF);
     previousMillisPUMP_IN = millis();       //mark time for timer for how long to be in 'hold' state
-    Serial.print("State: PUMP_IN_HOLD seconds:");  Serial.println(PUMP_INTERVAL_IN_POSTDELAY);
+    out.print("State: PUMP_IN_HOLD seconds:");  Serial.println(PUMP_INTERVAL_IN_POSTDELAY);
   }
   else if (newState == PUMP_OUT_HOLD) {
     controlSolenoid(OFF);
     pumpOut(OFF);
     previousMillisPUMP_OUT = millis();      //mark time for timer for how long to be in 'hold' state
-    Serial.print("State: PUMP_IN_HOLD seconds:");  Serial.println(PUMP_INTERVAL_IN_POSTDELAY);
+    out.print("State: PUMP_IN_HOLD seconds:");  Serial.println(PUMP_INTERVAL_IN_POSTDELAY);
   }
   else if (newState == PUMP_OFF) {
     controlSolenoid(OFF);
@@ -136,8 +138,8 @@ void changePumpTestState(enum PumpTestState newState) {
   pumpTestState = newState;
 
 #ifdef ENGINE_DEBUG_PRINT
-  Serial.print("==============NEW PumpTestState = ");
-  Serial.println(pumpTestStateStr[pumpTestState]);
+  out.print("==============NEW PumpTestState = ");
+  out.println(pumpTestStateStr[pumpTestState]);
 #endif
 }
 
@@ -146,14 +148,14 @@ void controlSolenoid(int turnON) {
     digitalWrite(SOLENOID_PIN, HIGH);
     actualSolenoidOn = ON;
 #ifdef ENGINE_DEBUG_PRINT
-    Serial.println("----Solenoid ON----");
+    out.println("----Solenoid ON----");
 #endif
   }
   else {
     digitalWrite(SOLENOID_PIN, LOW);
     actualSolenoidOn = OFF;
 #ifdef ENGINE_DEBUG_PRINT
-    Serial.println("----Solenoid OFF----");
+    out.println("----Solenoid OFF----");
 #endif
   }
 }
@@ -171,15 +173,16 @@ void pumpIn(bool turnON) {
     }
     else {
       //turn pump off
+      pump_off();
       actualPumpOnIn = OFF;
 #ifdef ENGINE_DEBUG_PRINT
-      Serial.println("----PumpIN OFF----");
+      out.println("----PumpIN OFF----");
 #endif
     }
   }
   else {
 #ifdef ENGINE_DEBUG_PRINT
-    Serial.println("----ERROR: pump is already ON OUT");
+    out.println("----ERROR: pump is already ON OUT");
 #endif
   }
 }
@@ -187,7 +190,7 @@ void pumpOut(bool turnON) {
   if (!actualPumpOnIn) {
     if (turnON) {
 #ifdef ENGINE_DEBUG_PRINT
-      Serial.println("----PumpOUT ON----");
+      out.println("----PumpOUT ON----");
 #endif
       //turn pump on
       pumpMotorSpin(DIRECTION_OUT, PWM_SLOW);
@@ -196,14 +199,15 @@ void pumpOut(bool turnON) {
     else {
       //turn pump off
       actualPumpOnOut = OFF;
+      pump_off();
 #ifdef ENGINE_DEBUG_PRINT
-      Serial.println("----PumpOUT OFF----");
+      out.println("----PumpOUT OFF----");
 #endif
     }
   }
   else {
 #ifdef ENGINE_DEBUG_PRINT
-    Serial.println("----ERROR: pump is already ON IN");
+    out.println("----ERROR: pump is already ON IN");
 #endif
   }
 }
@@ -232,8 +236,8 @@ void loopPumpStandbyRespondToKeyPresses() {
       pumpIn(ON);
     }
 #ifdef ENGINE_DEBUG_PRINT
-    Serial.print("KEY_PUMP_IN_TOGGLE pumpval= ");
-    Serial.println(actualPumpOnIn);
+    out.print("KEY_PUMP_IN_TOGGLE pumpval= ");
+    out.println(actualPumpOnIn);
 #endif
   }
   else if (b == KEY_PUMP_OUT_TOGGLE) {
@@ -243,8 +247,8 @@ void loopPumpStandbyRespondToKeyPresses() {
       pumpOut(ON);
     }
 #ifdef ENGINE_DEBUG_PRINT
-    Serial.print("KEY_PUMP_OUT_TOGGLE pumpval= ");
-    Serial.println(actualPumpOnOut);
+    out.print("KEY_PUMP_OUT_TOGGLE pumpval= ");
+    out.println(actualPumpOnOut);
 #endif
   }
   else if (b == KEY_SOLENOID_TOGGLE) {
@@ -255,8 +259,22 @@ void loopPumpStandbyRespondToKeyPresses() {
       controlSolenoid(ON);
     }
 #ifdef ENGINE_DEBUG_PRINT
-    Serial.print("KEY_SOLENOID_TOGGLE pumpval= ");
-    Serial.println(actualSolenoidOn);
+    out.print("KEY_SOLENOID_TOGGLE pumpval= ");
+    out.println(actualSolenoidOn);
+#endif
+  }
+  else if (b == KEY_VT100_DASH_TOGGLE) {
+    Serial.end();
+    if (displayVT100Dash) {
+      displayVT100Dash = false;
+    }
+    else {
+      displayVT100Dash = true;
+
+    }
+#ifdef ENGINE_DEBUG_PRINT
+    out.print("KEY_VT100_DASH_TOGGLE displayVT100Dash= ");
+    out.println(displayVT100Dash);
 #endif
   }
 }
@@ -273,4 +291,17 @@ byte checkSerial() {
     return incomingByte;
   }
   return -1;
+}
+
+void vt100DashDisplayStateMachine(bool refreshAll, int x, int y) {
+  if (refreshAll) {
+
+  }
+  // pumpTestStateStr[pumpTestState]
+  term.position(y, x);
+  term.print(F("State Machine"));
+  int y_off = 1;
+  term.position(y + y_off, x);
+  term.print(F("Pump Test State:"));
+  term.print(pumpTestStateStr[pumpTestState]);
 }

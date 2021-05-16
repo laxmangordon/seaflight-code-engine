@@ -3,14 +3,13 @@
 
 // 3/10/21  from Jeremy: CCW is OUT, CW is IN from perspective of reservoir
 
-#define DIRECTION_IN  0           //pumps INTO reservoir    
-#define DIRECTION_OUT 1          //pumps OUT of reservoir
-#define PWM_PUMP_PIN  3
+#define DIRECTION_IN          0           //pumps INTO reservoir    
+#define DIRECTION_OUT         1          //pumps OUT of reservoir
+#define PWM_PUMP_PIN          3
 
-#define PWM_ZERO        1000
-#define PWM_MAX         2000
-#define RAMP_DELAY      3000
-#define PWM_RAMP_INCR   20
+#define PWM_ZERO              1000
+#define RAMP_DELAY            3000
+#define PWM_RAMP_INCR         20
 
 #define ADC_INTERVAL          500
 #define ADC_READS_SHIFT       8
@@ -33,12 +32,12 @@
 #define CCW_PIN               8
 #define SOLENOID_PIN          6
 
-#define PWM_MAX       2000
-#define PWM_MIN       1000
-#define PWM_SLOW      1200
-#define PWM_MED       1300
-#define PWM_FAST      1500
-
+#define PWM_MAX               2300
+#define PWM_MIN               1000
+#define PWM_ZERO              1000
+#define PWM_SLOW              1500
+#define PWM_MED               1800
+#define PWM_FAST              2000
 
 int currentPWMSpeed = 1000;
 Servo myservo; 
@@ -47,6 +46,9 @@ void setupControlPump() {
   
   analogReadResolution(ADC_RESOLUTION_BITS);
   analogReadCorrection(12, 2055); //corrects gain
+
+  myservo.attach(PWM_PUMP_PIN);
+  myservo.write(PWM_ZERO);
   
   pinMode(CW_PIN, OUTPUT);
   digitalWrite(CW_PIN, HIGH);
@@ -57,9 +59,9 @@ void setupControlPump() {
   pinMode(SOLENOID_PIN, OUTPUT);
   digitalWrite(SOLENOID_PIN, LOW);
 
-  currentPWMSpeed = 1000;
+  currentPWMSpeed = 1000;           //this is not really used - more so if we have changing pump speeds later on JTR
 
-  myservo.attach(PWM_PUMP_PIN);
+  
 }
 
 void initControlPump() {
@@ -69,15 +71,15 @@ void initControlPump() {
 
 
 void pumpMotorSpin(int dir, int pwm) {
-  if (pwm >= PWM_MIN && pwm <= PWM_MAX) {
+  if (pwm >= PWM_ZERO && pwm <= PWM_MAX) {
     if (dir == DIRECTION_IN) {
-      Serial.printf("pumpMotorSpin DIRECTION_IN");
+      out.println("pumpMotorSpin DIRECTION_IN");
       digitalWrite(CCW_PIN, LOW);
       digitalWrite(CW_PIN, HIGH);
       myservo.write(pwm);
     }
     else if (dir == DIRECTION_OUT) {
-      Serial.printf("pumpMotorSpin DIRECTION_OUT");
+      out.println("pumpMotorSpin DIRECTION_OUT");
       digitalWrite(CCW_PIN, HIGH);
       digitalWrite(CW_PIN, LOW);
       myservo.write(pwm);
@@ -86,15 +88,10 @@ void pumpMotorSpin(int dir, int pwm) {
 }
 
 void pump_off() {
-  digitalWrite(CCW_PIN, LOW);
-  digitalWrite(CW_PIN, LOW);
-  myservo.write(PWM_MIN);
-}
-
-// turns on/off the enable
-void pumpMotorEnable(bool on) {
-
-
+  out.println("pumpMotorSpin pump off");
+  digitalWrite(CCW_PIN, HIGH);
+  digitalWrite(CW_PIN, HIGH);
+  myservo.write(PWM_ZERO);
 }
 
 /*
