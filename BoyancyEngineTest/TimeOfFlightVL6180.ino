@@ -1,5 +1,5 @@
 uint8_t reservoirDistanceTOF = 0;
-bool VL6180_connected = false;
+bool validTOF_VL6180 = false;
 unsigned long previousMillisTOF_VL6180 = 0;
 long intervalTOF_VL6180 = 50;
 
@@ -10,12 +10,12 @@ void setupTOF_VL6180() {
     Serial.println("VL6180 Failed to find sensor");
   } else {
     Serial.println("VL6180 Sensor Found");
-    VL6180_connected = true;
+    validTOF_VL6180 = true;
   }
 }
 
 void loopTOF_VL6180() {
-  if (VL6180_connected) {
+  if (validTOF_VL6180) {
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillisTOF_VL6180 > intervalTOF_VL6180) {
       previousMillisTOF_VL6180 = currentMillis;

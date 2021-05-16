@@ -4,7 +4,7 @@ long previousMillisLCDRefresh = 0;
 int displayCNT = 0;
 
 void setupLCDDisplay() {
-  //enableMuxPort(LCD_MUX);
+
   lcd.begin(Wire); //Set up the LCD for I2C communication
 
   lcd.setBacklight(200, 255, 255); //Set backlight to bright white
@@ -14,6 +14,23 @@ void setupLCDDisplay() {
   lcd.print("SeaFlightGlider 0.01");
   //disableMuxPort(LCD_MUX);
 }
+
+void loopLCDDisplay() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillisLCDRefresh > LCD_REFRESH_DELAY) {
+    previousMillisLCDRefresh = millis();
+    if (displayCNT++ > 10) {
+      lcdWritePressureReservoir();
+      lcdWritePressureBladder();
+      lcdWritePumpTestState();
+      lcdWriteTOF();
+      lcdWriteInput();
+      displayCNT = 0;
+    }
+    lcdWriteTimeDate();
+  }
+}
+
 void lcdWriteTimeDate() {
   //lcd.setCursor(0, 0);
   //lcd.print("                 ");
@@ -74,20 +91,4 @@ void lcdWritePumpTestState() {
   lcd.print(pumpTestStateStr[pumpTestState]);
   //lcd.print("     ");
   //disableMuxPort(LCD_MUX);
-}
-
-void loopLCDDisplay() {
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillisLCDRefresh > LCD_REFRESH_DELAY) {
-    previousMillisLCDRefresh = millis();
-    if (displayCNT++ > 10) {
-      lcdWritePressureReservoir();
-      lcdWritePressureBladder();
-      lcdWritePumpTestState();
-      lcdWriteTOF();
-      lcdWriteInput();
-      displayCNT = 0;
-    }
-    lcdWriteTimeDate();
-  }
 }

@@ -1,11 +1,21 @@
 
-#define CLOCK_RV1805_REFRESH_DELAY     20
-
-RV1805 rtc;
+const unsigned int CLOCK_RV1805_REFRESH_DELAY     20
 bool validClockRV1805 = false;
-String currentDate = "";
-String currentTime = "";
 long previousMillisClockRV1805 = 0;
+
+struct gliderTimeStruct {
+  int hund = 42;
+  int sec = 42;
+  int minute = 42;
+  int hour = 4;
+  int date = 1;
+  int month = 4;
+  int year = 1974;
+  int day = 26;
+
+};
+
+gliderTimeStruct currentTime;
 
 void setupClockRV1805() {
   if (rtc.begin() == false) {
@@ -14,6 +24,7 @@ void setupClockRV1805() {
   }
   else {
     validClockRV1805 = true;
+    
   }
 }
 
@@ -35,3 +46,17 @@ void loopClockRV1805() {
     }
   }
 }
+/*
+int setClockRV1805(gliderTimeStruct newTime) {
+  currentTime.hund = newTime.hund;
+  currentTime.sec = newTime.sec;
+  currentTime.minute = newTime.minute;
+  currentTime.hour = newTime.hour;
+  currentTime.date = newTime.date;
+  currentTime.month = newTime.month;
+  currentTime.year = newTime.year;
+  currentTime.day = newTime.day;
+  
+  return 1;
+}
+*/
