@@ -1,5 +1,5 @@
 #include <Servo.h>
-#include "SAMD_AnalogCorrection.h"
+//#include "SAMD_AnalogCorrection.h"
 
 // 3/10/21  from Jeremy: CCW is OUT, CW is IN from perspective of reservoir
 
@@ -44,8 +44,8 @@ Servo myservo;
 
 void setupControlPump() {
   
-  analogReadResolution(ADC_RESOLUTION_BITS);
-  analogReadCorrection(12, 2055); //corrects gain
+  //analogReadResolution(ADC_RESOLUTION_BITS);
+  //analogReadCorrection(12, 2055); //corrects gain
 
   myservo.attach(PWM_PUMP_PIN);
   myservo.write(PWM_ZERO);
