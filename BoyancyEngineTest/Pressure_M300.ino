@@ -43,7 +43,6 @@ void loopPressure_M300() {
       latestPressureM300_BLADDER = getPressure_M300(PRESSURE_M300_BLADDER);  //bladder for now until we get mux, it was all we had on initial testbed
       latestPressureM300_RESERVOIR = getPressure_M300(PRESSURE_M300_RESERVOIR);
 
-
       if (SENSOR_DEBUG_PRINT) {
         //Serial.print("pressure M300 = ");
         //Serial.println(latestPressureM300_BLADDER);

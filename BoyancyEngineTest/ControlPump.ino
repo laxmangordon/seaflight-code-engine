@@ -1,5 +1,5 @@
 #include <Servo.h>
-#include "SAMD_AnalogCorrection.h"
+//#include "SAMD_AnalogCorrection.h"
 
 // 3/10/21  from Jeremy: CCW is OUT, CW is IN from perspective of reservoir
 
@@ -32,9 +32,9 @@
 #define CCW_PIN               8
 #define SOLENOID_PIN          6
 
-#define PWM_MAX               2300
+#define PWM_MAX               2000
 #define PWM_MIN               1000
-#define PWM_ZERO              1000
+#define PWM_ZERO              1500
 #define PWM_SLOW              1500
 #define PWM_MED               1800
 #define PWM_FAST              2000
@@ -44,8 +44,8 @@ Servo myservo;
 
 void setupControlPump() {
   
-  analogReadResolution(ADC_RESOLUTION_BITS);
-  analogReadCorrection(12, 2055); //corrects gain
+  //analogReadResolution(ADC_RESOLUTION_BITS);
+  //analogReadCorrection(12, 2055); //corrects gain
 
   myservo.attach(PWM_PUMP_PIN);
   myservo.write(PWM_ZERO);

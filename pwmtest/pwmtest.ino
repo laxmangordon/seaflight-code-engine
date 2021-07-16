@@ -74,8 +74,8 @@ void setup() {
   Serial.println("1 1000 means set pwm to 1000");
   Serial.println("2 means ramp up from 1000 (which is 0 rpm)");
   Serial.println("3 means ramp dn to 1000 (which is 0 rpm)");
-  Serial.println("4 means SOLENOID = ON");
-  Serial.println("5 means SOLENOID = OFF");
+  Serial.println("4 HIGH");
+  Serial.println("5 NEUTRAL");
   Serial.println("6 means CW PUMP TOGGLE");
   Serial.println("7 means CCW PUMP TOGGLE");
   Serial.println("8 means CW ENABLED");
@@ -118,13 +118,13 @@ void loop() {
           Serial.println("starting rampDn...");
         }
         break;
-      case 4:
-        digitalWrite(SOLENOID_PIN, HIGH);       // 0.83amps @ 12.2v = 10.13watts
-        Serial.println("SOLENOID_PIN, HIGH");
+      case 4: //HIGH
+        //digitalWrite(SOLENOID_PIN, HIGH);       // 0.83amps @ 12.2v = 10.13watts
+        //Serial.println("SOLENOID_PIN, HIGH");
         break;
-      case 5:
-        digitalWrite(SOLENOID_PIN, LOW);
-        Serial.println("SOLENOID_PIN, LOW");
+      case 5: //NEUTRAL
+        //digitalWrite(SOLENOID_PIN, LOW);
+        //Serial.println("SOLENOID_PIN, LOW");
         break;
       case 6:
         if (pumpCW) {

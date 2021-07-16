@@ -5,8 +5,21 @@
     PUMP OUT means pumping out of the reservoir (and into the bladder)  i.e. CLIMBING
 
     Todo:
+Blue Robotics ESC:
+- Stopped  1500 microseconds
+- Max forward 1900 microseconds
+- Max reverse 1100 microseconds
+
+jeremy:
+180 - forward
+25 - reverse
+95 - neutral
+1 amp = 200ml/minute
+3.5 amps = 25 ml/minute
 
 */
+
+
 #define RUN_CYCLES  2                //number of complete cycles (i.e. dives) to go through
 #define PRESSURE_UPPER_LIMIT 15   //Pressure Upper Limit
 #define PRESSURE_LOWER_LIMIT -5   //Pressure Lower Limit
@@ -14,20 +27,24 @@
 #define ON  1
 #define OFF 0
 
-#define PUMP_INTERVAL_IN_POSTDELAY 5000  //amount of time between cycles.. 
-#define PUMP_INTERVAL_OUT_POSTDELAY 5000  //amount of time between cycles.. 
+#define PUMP_INTERVAL_IN_POSTDELAY    5000    //amount of time between cycles.. 
+#define PUMP_INTERVAL_OUT_POSTDELAY   5000    //amount of time between cycles.. 
+#define PUMP_INTERVAL_IN_PUMP_ON      5000    //amount of time pump IN is ON
+#define PUMP_INTERVAL_OUT_PUMP_ON     5000    //amount of time pump OUT is ON 
+
 #define CYCLE_START_WITH_PUMP_IN 1
 
-#define KEY_START_PUMP_TEST_CYCLE 116   //letter 't' lowercase, kicks off pump cycle
-#define KEY_PUMP_IN_TOGGLE    105     //letter 'i' lowercase
-#define KEY_PUMP_OUT_TOGGLE   111     //letter 'o' lowercase
-#define KEY_SOLENOID_TOGGLE   115     //letter 's' lowercase
-#define KEY_NEXT_STATE        110     //letter 'n' lowercase
-#define KEY_VT100_DASH_TOGGLE 100     //letter 'd' lowercase
-
+#define KEY_START_PUMP_TEST_CYCLE     116     //letter 't' lowercase, kicks off pump cycle
+#define KEY_PUMP_IN_TOGGLE            105     //letter 'i' lowercase
+#define KEY_PUMP_OUT_TOGGLE           111     //letter 'o' lowercase
+#define KEY_SOLENOID_TOGGLE           115     //letter 's' lowercase
+#define KEY_NEXT_STATE                110     //letter 'n' lowercase
+#define KEY_VT100_DASH_TOGGLE         100     //letter 'd' lowercase
 
 unsigned long previousMillisPUMP_IN = 0;
 unsigned long previousMillisPUMP_OUT = 0;
+unsigned long previousMillisPUMP_IN_ON = 0;
+unsigned long previousMillisPUMP_OUT_ON = 0;
 
 bool actualPumpOnIn = OFF;
 bool actualPumpOnOut = OFF;
@@ -49,7 +66,13 @@ void loopPumpTest() {
     }
     else if (pumpTestState == PUMP_IN_ON) {
       b = checkSerial();
-      if (latestPressureM300_BLADDER >= PRESSURE_UPPER_LIMIT || b == KEY_NEXT_STATE) { //pressing 'n' will skip to next state
+      if (b == KEY_NEXT_STATE) {                  //pressing 'n' will skip to next state
+        changePumpTestState(PUMP_IN_HOLD);
+      } 
+      else if (currentMillis - previousMillisPUMP_IN_ON > PUMP_INTERVAL_IN_PUMP_ON) {
+        changePumpTestState(PUMP_IN_HOLD);
+      }
+      else if (latestPressureM300_BLADDER >= PRESSURE_UPPER_LIMIT ) { 
         changePumpTestState(PUMP_IN_HOLD);
       }
       else if (b == KEY_START_PUMP_TEST_CYCLE) { //press 't' again to stop test (toggle)
@@ -58,7 +81,13 @@ void loopPumpTest() {
     }
     else if (pumpTestState == PUMP_OUT_ON) {
       b = checkSerial();
-      if (latestPressureM300_BLADDER < PRESSURE_LOWER_LIMIT || b == KEY_NEXT_STATE) {
+      if(b == KEY_NEXT_STATE){
+        changePumpTestState(PUMP_OUT_HOLD);
+      }
+      else if (currentMillis - previousMillisPUMP_OUT_ON > PUMP_INTERVAL_OUT_PUMP_ON) {
+        changePumpTestState(PUMP_OUT_HOLD);
+      }
+      else if (latestPressureM300_BLADDER < PRESSURE_LOWER_LIMIT) {
         changePumpTestState(PUMP_OUT_HOLD);
       }
       else if (b == KEY_START_PUMP_TEST_CYCLE) { //press 't' again to stop test (toggle)
@@ -99,8 +128,6 @@ void changePumpTestState(enum PumpTestState newState) {
     initControlPump();
   }
   else if (newState == PUMP_STANDBY) {
-    
-    
     out.println("PUMP_STANDBY accepting serial commands:");
     out.println("(t) to begin engine cycle test");
     out.println("(s) to toggle solenoid");
@@ -111,25 +138,29 @@ void changePumpTestState(enum PumpTestState newState) {
   else if (newState == PUMP_IN_ON) {
     controlSolenoid(ON);
     pumpIn(ON);
-    out.println("State: PUMP_IN_ON press (n) to skip PUMP_IN_HOLD");
+    previousMillisPUMP_IN_ON = millis();
+    out.println("State: PUMP_IN_ON press (n) to skip to PUMP_IN_HOLD");
 
   }
   else if (newState == PUMP_OUT_ON) {
     controlSolenoid(OFF);
     pumpOut(ON);
-    out.println("State: PUMP_OUT_ON press (n) to skip PUMP_OUT_HOLD");
+    previousMillisPUMP_OUT_ON = millis();
+    out.println("State: PUMP_OUT_ON press (n) to skip to PUMP_OUT_HOLD");
   }
   else if (newState == PUMP_IN_HOLD) {
     controlSolenoid(OFF);
     pumpIn(OFF);
     previousMillisPUMP_IN = millis();       //mark time for timer for how long to be in 'hold' state
-    out.print("State: PUMP_IN_HOLD seconds:");  Serial.println(PUMP_INTERVAL_IN_POSTDELAY);
+    out.print("State: PUMP_IN_HOLD seconds:");  
+    Serial.println(PUMP_INTERVAL_IN_POSTDELAY);
   }
   else if (newState == PUMP_OUT_HOLD) {
     controlSolenoid(OFF);
     pumpOut(OFF);
     previousMillisPUMP_OUT = millis();      //mark time for timer for how long to be in 'hold' state
-    out.print("State: PUMP_IN_HOLD seconds:");  Serial.println(PUMP_INTERVAL_IN_POSTDELAY);
+    out.print("State: PUMP_IN_HOLD seconds:");  
+    Serial.println(PUMP_INTERVAL_IN_POSTDELAY);
   }
   else if (newState == PUMP_OFF) {
     controlSolenoid(OFF);

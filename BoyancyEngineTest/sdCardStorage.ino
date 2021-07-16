@@ -1,7 +1,6 @@
 
-
 #define STORAGE_REFRESH_DELAY     1000
-const int chipSelect = SDCARD_SS_PIN;
+const int chipSelect = 1 //SDCARD_SS_PIN;   //todo: remove board specific variables
 bool validSDCard = false;
 long previousMillisStorage = 0;
 
