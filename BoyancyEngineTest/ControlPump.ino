@@ -32,9 +32,9 @@
 #define CCW_PIN               8
 #define SOLENOID_PIN          6
 
-#define PWM_MAX               2300
+#define PWM_MAX               2000
 #define PWM_MIN               1000
-#define PWM_ZERO              1000
+#define PWM_ZERO              1500
 #define PWM_SLOW              1500
 #define PWM_MED               1800
 #define PWM_FAST              2000

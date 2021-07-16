@@ -1,7 +1,8 @@
+#include "SparkFun_Ublox_Arduino_Library.h" // library: http://librarymanager/All#SparkFun_u-blox_GNSS
 
 #define UTF8_HEX_DEGREE_SYMBOL                  "\xC2\xB0"
+const unsigned int COMPASS_HMC6343_REFRESH_DELAY = 200;
 
-const unsigned int COMPASS_HMC6343_REFRESH_DELAY     200
 SFE_HMC6343 compass; // Declare the sensor object
 bool validCompassHMC6343 = false;
 long previousMillisCompassHMC6343 = 0;
@@ -13,6 +14,7 @@ void setupCompassHMC6343() {
     Serial.println("Sensor Initialization Failed\n\r"); // Report failure, is the sensor wiring correct?
   }
   else {
+    Serial.println("CompassHMC6343 Sensor Found");
     validCompassHMC6343 = true;
   }
 

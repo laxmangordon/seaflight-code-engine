@@ -4,12 +4,13 @@
 #endif
 
 #include <Wire.h>
-#include <SerLCD.h> //Click here to get the library: http://librarymanager/All#SparkFun_SerLCD
+#include <SerLCD.h>                         //Click here to get the library: http://librarymanager/All#SparkFun_SerLCD
 #include <SPI.h>
 #include <SD.h>
-#include "Adafruit_VL6180X.h"   // library: https://github.com/adafruit/Adafruit_VL6180X
-#include "SparkFun_RV1805.h"    // library: https://github.com/sparkfun/SparkFun_RV-1805_Arduino_Library/archive/master.zip  https://github.com/sparkfun/SparkFun_RV-1805_Arduino_Library
-#include "SFE_HMC6343.h"        // library: https://github.com/sparkfun/SparkFun_HMC6343_Arduino_Library
+#include "Adafruit_VL6180X.h"               // library: https://github.com/adafruit/Adafruit_VL6180X
+#include "SparkFun_RV1805.h"                // library: https://github.com/sparkfun/SparkFun_RV-1805_Arduino_Library/archive/master.zip  https://github.com/sparkfun/SparkFun_RV-1805_Arduino_Library
+#include "SFE_HMC6343.h"                    // library: https://github.com/sparkfun/SparkFun_HMC6343_Arduino_Library
+
 #include <BasicTerm.h>
 
 #define ENGINE_DEBUG_PRINT 1
@@ -31,10 +32,10 @@ class DualPrint : public Print
         Serial.write(c);
       }
       if (use_Serial1) {
-            term.position(23, 2);
-            term.print(c);
+        term.position(23, 2);
+        term.print(c);
         //Serial1.write(c);
-        
+
       }
       return 1;
     }
@@ -128,10 +129,10 @@ void setup() {
   pumpTestState = PUMP_INIT;
 
   setupClockRV1805();
-  //setupPressure_M300();
+  setupPressure_M300();
   setupPumpTest();
   setupControlPump();
-  //setupTOF_VL6180();
+  setupTOF_VL6180();
   //setupInputs();
   //setupStorage();
   setupCompassHMC6343();

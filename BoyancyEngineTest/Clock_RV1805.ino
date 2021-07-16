@@ -1,5 +1,5 @@
 
-const unsigned int CLOCK_RV1805_REFRESH_DELAY     20
+const unsigned int CLOCK_RV1805_REFRESH_DELAY = 20;
 bool validClockRV1805 = false;
 long previousMillisClockRV1805 = 0;
 
@@ -15,7 +15,7 @@ struct gliderTimeStruct {
 
 };
 
-gliderTimeStruct currentTime;
+//gliderTimeStruct currentTime;
 
 void setupClockRV1805() {
   if (rtc.begin() == false) {
@@ -23,6 +23,7 @@ void setupClockRV1805() {
     Serial.println("setupClockRV1805: Something went wrong, check wiring");
   }
   else {
+    Serial.println("ClockRV1805 Sensor Found");
     validClockRV1805 = true;
     
   }
