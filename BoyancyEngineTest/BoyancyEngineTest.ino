@@ -89,7 +89,7 @@ enum PumpTestState {
 };
 enum PumpTestState pumpTestState;
 const char* pumpTestStateStr[] = {"INIT", "STANDBY", "PUMP_IN_ON", "PUMP_OUT_ON", "PUMP_OUT_HOLD", "PUMP_IN_HOLD", "PUMP_OFF", "PUMP_HOLD_FOR"};
-bool displayVT100Dash = true;
+bool displayVT100Dash = false;
 String currentDate = "";
 String currentTime = "";
 long Pressure;
@@ -116,7 +116,7 @@ void setup() {
     delay(1000);
     serialDelay++;
   }
-  out.use_Serial = false;
+  out.use_Serial = true;
   Wire.begin();        //begin I2C Comm.
   setupLCDDisplay();
   //Serial.println("SeaFlight Glider v0.01 ENGINE TEST CODE");
@@ -129,7 +129,7 @@ void setup() {
   pumpTestState = PUMP_INIT;
 
   setupClockRV1805();
-  setupPressure_M300();
+  //setupPressure_M300();
   setupPumpTest();
   setupControlPump();
   setupTOF_VL6180();
